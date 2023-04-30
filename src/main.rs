@@ -23,7 +23,7 @@ fn main() -> Result<(), DecoderError> {
         1 => println!("{HELP_TEXT}"),
         _ => {
             let image_path = &args[1];
-            let image_buff = read_file(image_path).expect("file does not exists");
+            let image_buff = read_file(image_path).expect("Error reading the image.");
             let mut decoder = Decoder::new(image_buff);
             let chunks = decoder.decode()?;
             for chunk in chunks.iter() {
