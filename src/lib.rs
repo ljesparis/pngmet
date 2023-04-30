@@ -17,7 +17,7 @@ pub enum DecoderError {
 }
 
 #[derive(Clone, Debug)]
-pub enum ChunkData {
+pub enum Chunk {
     Ihdr {
         width: u32,
         height: u32,
@@ -44,28 +44,65 @@ pub enum ChunkData {
     },
 }
 
-impl Display for ChunkData {
+impl Display for Chunk {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-           Self::Ihdr { width, height, bit_depth, colour_type, compression_method, filter_method, interlace_method, ..} => write!(f, "
+            Self::Ihdr {
+                width,
+                height,
+                bit_depth,
+                colour_type,
+                compression_method,
+                filter_method,
+                interlace_method,
+                ..
+            } => write!(
+                f,
+                "
 Width:  {}
 height: {}
 Bit Depth: {}
 colour_type: {}
 compression_method: {}
 filter_method: {}
-interlace_method: {}", width, height, bit_depth, colour_type, compression_method, filter_method, interlace_method),
-           Self::Text { keyword, text_string, .. } => write!(f, "
+interlace_method: {}",
+                width,
+                height,
+                bit_depth,
+                colour_type,
+                compression_method,
+                filter_method,
+                interlace_method
+            ),
+            Self::Text {
+                keyword,
+                text_string,
+                ..
+            } => write!(
+                f,
+                "
 Keyword: {keyword}
-Text String: {text_string}"),
-            Self::Itxt { keyword, compression_flag, compression_method, language_tag, translated_keyword, text, .. } => write!(f, "
+Text String: {text_string}"
+            ),
+            Self::Itxt {
+                keyword,
+                compression_flag,
+                compression_method,
+                language_tag,
+                translated_keyword,
+                text,
+                ..
+            } => write!(
+                f,
+                "
 Keyword: {keyword}
 Compression flag: {compression_flag}
 Compression method: {compression_method}
 Language Tag: {language_tag}
 Translated Keyword: {translated_keyword}
 Text: {text}
-"),
+"
+            ),
         }
     }
 }
@@ -75,7 +112,7 @@ pub struct Decoder {
     start_offset: usize,
 
     buffer: Vec<u8>,
-    chunks: Vec<ChunkData>,
+    chunks: Vec<Chunk>,
 }
 
 impl Decoder {
@@ -122,7 +159,7 @@ impl Decoder {
         let interlace_method = &self.buffer[self.start_offset..self.start_offset + 1];
         self.start_offset += 1;
 
-        self.chunks.push(ChunkData::Ihdr {
+        self.chunks.push(Chunk::Ihdr {
             bit_depth: bit_depth[0],
             colour_type: colour_type[0],
             compression_method: compression_method[0],
@@ -161,7 +198,7 @@ impl Decoder {
         self.start_offset += delta;
         self.start_offset += 4;
 
-        self.chunks.push(ChunkData::Text {
+        self.chunks.push(Chunk::Text {
             keyword,
             text_string,
             raw: raw.to_vec(),
@@ -204,7 +241,7 @@ impl Decoder {
         self.start_offset += delta;
         self.start_offset += 4;
 
-        self.chunks.push(ChunkData::Itxt {
+        self.chunks.push(Chunk::Itxt {
             keyword,
             compression_flag: compression_flag[0],
             compression_method: compression_method[0],
@@ -247,7 +284,7 @@ impl Decoder {
         }
     }
 
-    pub fn decode(&mut self) -> Result<Vec<ChunkData>, DecoderError> {
+    pub fn decode(&mut self) -> Result<Vec<Chunk>, DecoderError> {
         let signature = &self.buffer[self.start_offset..self.start_offset + 8];
         self.start_offset += 8;
 
@@ -263,7 +300,7 @@ impl Decoder {
 
 #[cfg(test)]
 mod tests {
-    use super::{ChunkData, Decoder};
+    use super::{Chunk, Decoder};
 
     use std::{
         fs::{self, File},
@@ -290,7 +327,7 @@ mod tests {
 
         for parsed_chunk in metadata.iter() {
             match parsed_chunk {
-                ChunkData::Ihdr {
+                Chunk::Ihdr {
                     width,
                     height,
                     bit_depth,
@@ -308,7 +345,7 @@ mod tests {
                     assert_eq!(*filter_method, 0);
                     assert_eq!(*interlace_method, 0);
                 }
-                ChunkData::Text {
+                Chunk::Text {
                     keyword,
                     text_string,
                     ..
@@ -316,7 +353,7 @@ mod tests {
                     assert_eq!(*keyword, "Software".to_string());
                     assert_eq!(*text_string, "Adobe ImageReady".to_string());
                 }
-                ChunkData::Itxt {
+                Chunk::Itxt {
                     keyword,
                     compression_flag,
                     compression_method,
@@ -344,7 +381,7 @@ mod tests {
 
         for (i, parsed_chunk) in metadata.iter().enumerate() {
             match parsed_chunk {
-                ChunkData::Ihdr {
+                Chunk::Ihdr {
                     width,
                     height,
                     bit_depth,
@@ -362,7 +399,7 @@ mod tests {
                     assert_eq!(*filter_method, 0);
                     assert_eq!(*interlace_method, 0);
                 }
-                ChunkData::Text {
+                Chunk::Text {
                     keyword,
                     text_string,
                     ..
@@ -402,7 +439,7 @@ mod tests {
 
         for (i, parsed_chunk) in metadata.iter().enumerate() {
             match parsed_chunk {
-                ChunkData::Ihdr {
+                Chunk::Ihdr {
                     width,
                     height,
                     bit_depth,
@@ -420,7 +457,7 @@ mod tests {
                     assert_eq!(*filter_method, 0);
                     assert_eq!(*interlace_method, 0);
                 }
-                ChunkData::Text {
+                Chunk::Text {
                     keyword,
                     text_string,
                     ..
