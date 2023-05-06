@@ -1,4 +1,6 @@
-use std::fmt::Display;
+pub(crate) mod chunk;
+
+use chunk::Chunk;
 
 const PNG_SIGNATURE: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
 
@@ -14,97 +16,6 @@ pub enum DecoderError {
     IsNotPngImage,
     IHDRWrongSize,
     UnkownTagFound,
-}
-
-#[derive(Clone, Debug)]
-pub enum Chunk {
-    Ihdr {
-        width: u32,
-        height: u32,
-        bit_depth: u8,
-        colour_type: u8,
-        compression_method: u8,
-        filter_method: u8,
-        interlace_method: u8,
-        raw: Vec<u8>,
-    },
-    Text {
-        keyword: String,
-        text_string: String,
-        raw: Vec<u8>,
-    },
-    Itxt {
-        keyword: String,
-        compression_flag: u8,
-        compression_method: u8,
-        language_tag: String,
-        translated_keyword: String,
-        text: String,
-        raw: Vec<u8>,
-    },
-}
-
-impl Display for Chunk {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Ihdr {
-                width,
-                height,
-                bit_depth,
-                colour_type,
-                compression_method,
-                filter_method,
-                interlace_method,
-                ..
-            } => write!(
-                f,
-                "
-Width:  {}
-height: {}
-Bit Depth: {}
-colour_type: {}
-compression_method: {}
-filter_method: {}
-interlace_method: {}",
-                width,
-                height,
-                bit_depth,
-                colour_type,
-                compression_method,
-                filter_method,
-                interlace_method
-            ),
-            Self::Text {
-                keyword,
-                text_string,
-                ..
-            } => write!(
-                f,
-                "
-Keyword: {keyword}
-Text String: {text_string}"
-            ),
-            Self::Itxt {
-                keyword,
-                compression_flag,
-                compression_method,
-                language_tag,
-                translated_keyword,
-                text,
-                ..
-            } => write!(
-                f,
-                "
-Keyword: {keyword}
-Compression flag: {compression_flag}
-Compression method: {compression_method}
-Language Tag: {language_tag}
-Translated Keyword: {translated_keyword}
-Text: {text}
-"
-            ),
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
